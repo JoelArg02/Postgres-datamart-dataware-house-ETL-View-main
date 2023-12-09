@@ -1,0 +1,83 @@
+version: '3'
+
+services:
+  mongo_redes_sociales:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./volumenes/mongo_redes_sociales_data:/data/db
+    networks:
+      - pr_ps
+
+  mongo_iot:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./volumenes/mongo_iot_data:/data/db
+    networks:
+      - pr_ps
+
+  mysql_inventario:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: inventario
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./volumenes/mysql_inventario_data:/var/lib/mysql
+    networks:
+      - pr_ps
+
+  mysql_recursos_humanos:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: recursos_humanos
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./volumenes/mysql_recursos_humanos_data:/var/lib/mysql
+    networks:
+      - pr_ps
+
+  mysql_ventas:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ventas
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./volumenes/mysql_ventas_data:/var/lib/mysql
+    networks:
+      - pr_ps
+
+  mysqli_facturacion:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: gestion_facturacion
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./volumenes/mysqli_facturacion_data:/var/lib/mysql
+    networks:
+      - pr_ps
+
+  mysqli_proyectos:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: gestion_proyectos
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./volumenes/mysqli_proyectos_data:/var/lib/mysql
+    networks:
+      - pr_ps
+
+networks:
+  pr_ps:
