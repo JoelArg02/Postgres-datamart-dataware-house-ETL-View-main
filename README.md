@@ -47,12 +47,16 @@ docker restart master-2
 
 # Configuracion Maestro a Maestro
 
+
+´´´
 SELECT pg_create_physical_replication_slot('replication_slot1');
 SELECT pg_create_physical_replication_slot('replication_slot2');
 
 SELECT pg_start_backup('base_backup');
 rsync -a /var/lib/postgresql/data/ postgres-master2:/var/lib/postgresql/data/
 SELECT pg_stop_backup();
+
+´´´
 
 ## Configurar el Archivo recovery.conf en el Nodo Maestro 2:
 
