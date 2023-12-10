@@ -70,14 +70,13 @@ with mysql.connector.connect(
 
 # PostgreSQL
 with psycopg2.connect(
-    host="tu_host_postgres",
-    user="tu_usuario_postgres",
-    password="tu_contraseña_postgres",
-    database="nombre_db_postgres"
+    host="localhost",
+    user="postgres",
+    password="password",
+    database="ETL-B"
 ) as postgres_conn:
     postgres_cursor = postgres_conn.cursor()
 
-    # Resto del código de inserción permanece igual
 
 postgres_conn.commit()
 postgres_conn.close()

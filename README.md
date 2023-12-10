@@ -12,19 +12,19 @@ docker network create nodes-master
 
 # Nodo Maestro 1
 ```
-docker run --name master-1 -e POSTGRES_PASSWORD=password -d postgres
+docker run --name master-1 -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres
 ```
 ### Conectar a red
 ```
-docker network connect nodes-master master-1
+docker network connect nodos-master master-1
 ```
 # Nodo Maestro 2
 ```
-docker run --name master-2 -e POSTGRES_PASSWORD=password -d postgres
+docker run --name master-2 -p 5433:5432 -e POSTGRES_PASSWORD=password -d postgres
 ```
 ### Conectar a red
 ```
-docker network connect nodes-master master-2
+docker network connect nodos-master master-2
 ```
 
 ## Configuracion nodo master 1
@@ -61,24 +61,16 @@ docker restart master-2
 ```sql
 SELECT pg_create_physical_replication_slot('replication_slot1');
 SELECT pg_create_physical_replication_slot('replication_slot2');
-
-SELECT pg_start_backup('base_backup');
-rsync -a /var/lib/postgresql/data/ postgres-master2:/var/lib/postgresql/data/
-SELECT pg_stop_backup();
 ```
 
+## Reinicas el MASTER 1
+```
+SELECT pg_create_logical_replication_slot('replication_slot1', 'pgoutput');
+```
 
-## Configurar el Archivo recovery.conf en el Nodo Maestro 2:
+## Reinicas el MASTER 2
+```
+SELECT pg_create_logical_replication_slot('replication_slot2', 'pgoutput');
+```
+docker restart maestro-1 maestro-2
 
-```bash
-docker exec -it postgres-master2 bash
-```
-# Crear el archivo recovery.conf
-``` bash
-echo "standby_mode = 'on'" >> /var/lib/postgresql/data/recovery.conf
-echo "primary_conninfo = 'host=postgres-master1 port=5432 user=postgres password=password'" >> /var/lib/postgresql/data/recovery.conf
-```
-### Reinicia el nodo 
-```bash
-docker restart master-2
-```
