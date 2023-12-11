@@ -17,7 +17,6 @@ db_redes = client_redes["redes"]
 
 mi_numero = 20
 
-# Colección de Usuarios en "redes"
 for _ in range(mi_numero):
     usuario_redes = {
         "nombre_usuario": fake.user_name(),
@@ -26,7 +25,6 @@ for _ in range(mi_numero):
     }
     db_redes.usuarios.insert_one(usuario_redes)
 
-# Colección de Publicaciones en "redes"
 usuarios_ids_redes = [user["_id"] for user in db_redes.usuarios.find({}, {"_id": 1})]
 for _ in range(mi_numero):
     publicacion_redes = {
@@ -37,7 +35,6 @@ for _ in range(mi_numero):
     }
     db_redes.publicaciones.insert_one(publicacion_redes)
 
-# Colección de Comentarios en "redes"
 publicaciones_ids_redes = [publicacion["_id"] for publicacion in db_redes.publicaciones.find({}, {"_id": 1})]
 for _ in range(mi_numero):
     comentario_redes = {
