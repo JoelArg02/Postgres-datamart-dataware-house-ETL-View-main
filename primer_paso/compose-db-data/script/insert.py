@@ -66,7 +66,7 @@ client.close()
 client_iot = MongoClient("mongodb://localhost:27018")
 db_iot = client_iot["iot"]
 
-tipos_sensores = ["Sensor de Temperatura", "Sensor de Humedad", "Sensor de Luz", "Sensor de Presión", "Sensor de Sonido"]
+tipos_sensores = ["Sensor de entrada", "Sensor de salida", "Sensor de Luz", "Sensor de vigilancia", "Sensor de Sonido"]
 
 
 dispositivos_data = [
