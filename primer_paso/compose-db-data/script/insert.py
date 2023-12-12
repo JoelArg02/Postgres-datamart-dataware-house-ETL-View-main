@@ -10,84 +10,120 @@ from faker import Faker
 
 fake = Faker('es_ES')
 
-mi_numero = 20
+mi_numero = 100
 
-client_redes = MongoClient("mongodb://localhost:27017")
-db_redes = client_redes["redes"]
+client = MongoClient("mongodb://localhost:27017")
+db = client["redes"]
+fake = Faker()
 
-mi_numero = 20
+
+
+usuarios = []
+ids_usuario = []  # Lista para guardar los IDs generados
 
 for _ in range(mi_numero):
-    usuario_redes = {
+    id_usuario = random.randint(1, 100)
+    ids_usuario.append(id_usuario)  # Guarda el ID generado
+
+    usuario = {
+        "id_usuario": id_usuario,
         "nombre_usuario": fake.user_name(),
         "correo": fake.email(),
         "amigos": []
     }
-    db_redes.usuarios.insert_one(usuario_redes)
+    usuarios.append(usuario)
+    db.usuarios.insert_one(usuario)
 
-usuarios_ids_redes = [user["_id"] for user in db_redes.usuarios.find({}, {"_id": 1})]
+for usuario in usuarios:
+    amigos_potenciales = [u for u in usuarios if u != usuario and random.choice([True, False])]
+    usuario["amigos"] = [amigo["id_usuario"] for amigo in amigos_potenciales]
+    db.usuarios.update_one({"id_usuario": usuario["id_usuario"]}, {"$set": {"amigos": usuario["amigos"]}})
+
+ids_publicacion = []  # Lista para almacenar los IDs de publicación
+
 for _ in range(mi_numero):
-    publicacion_redes = {
-        "id_usuario": random.choice(usuarios_ids_redes),
+    id_pub = random.randint(1, 1000)  # Genera un ID único para la publicación
+    ids_publicacion.append(id_pub)  # Guarda el ID generado
+
+    publicacion = {
+        "id_publicacion": id_pub,  # Asigna el ID único a la publicación
+        "id_usuario": random.choice(ids_usuario),
         "contenido": fake.text(),
         "fecha_publicacion": datetime.utcnow(),
-        "likes": []
+        "likes": random.sample(ids_usuario, random.randint(0, len(ids_usuario)))
     }
-    db_redes.publicaciones.insert_one(publicacion_redes)
+    db.publicaciones.insert_one(publicacion)
 
-publicaciones_ids_redes = [publicacion["_id"] for publicacion in db_redes.publicaciones.find({}, {"_id": 1})]
 for _ in range(mi_numero):
-    comentario_redes = {
-        "id_publicacion": random.choice(publicaciones_ids_redes),
-        "id_usuario": random.choice(usuarios_ids_redes),
+    comentario = {
+        "id_publicacion": random.choice(ids_publicacion),  # Usa un ID de la lista de IDs de publicación
         "texto": fake.text(),
         "fecha_comentario": datetime.utcnow()
     }
-    db_redes.comentarios.insert_one(comentario_redes)
+    db.comentarios.insert_one(comentario)
 
 
-client_redes.close()
+
+client.close()
 
 client_iot = MongoClient("mongodb://localhost:27018")
 db_iot = client_iot["iot"]
 
-fake = Faker()
+fake = Faker('es_ES')
+
+tipos_sensores = ["Sensor de Temperatura", "Sensor de Humedad", "Sensor de Luz", "Sensor de Presión", "Sensor de Sonido"]
+
 
 dispositivos_data = [
     {
-        "nombre_dispositivo": fake.word() + " Device",
+        "nombre_dispositivo": fake.word() + " device",
         "tipo": fake.word(),
         "ubicacion": fake.city()
     }
     for _ in range(mi_numero)
 ]
 
-db_iot.dispositivos.insert_many(dispositivos_data)
+# Insertar dispositivos en la base de datos y obtener sus IDs
+dispositivos_ids = db_iot.dispositivos.insert_many(dispositivos_data).inserted_ids
 
-lecturas_data = [
+# Crear sensores, lecturas y alertas con referencias a dispositivos existentes
+sensor_data = [
     {
-        "id_dispositivo": ObjectId(),
-        "tipo_sensor": fake.word() + " Sensor",
-        "valor": fake.random.uniform(0, 100),
-        "fecha_lectura": fake.date_time_this_decade()
+        "tipo_sensor": random.choice(tipos_sensores),
+        "id_dispositivo": random.choice(dispositivos_ids)
     }
     for _ in range(mi_numero)
 ]
 
+# Insertar datos de sensores en la base de datos
+db_iot.sensores_informacion.insert_many(sensor_data)
+
+lecturas_data = [
+    {
+        "valor": fake.random.uniform(0, 100),
+        "fecha_lectura": fake.date_time_this_decade(),
+        "id_dispositivo": random.choice(dispositivos_ids)
+    }
+    for _ in range(mi_numero)
+]
+
+# Insertar datos de lecturas en la base de datos
 db_iot.lecturas_sensores.insert_many(lecturas_data)
 
 alertas_data = [
     {
-        "id_dispositivo": ObjectId(),
-        "tipo_alerta": fake.word() + " Alert",
+        "tipo_alerta": fake.word() + " alert",
         "fecha_alerta": fake.date_time_this_decade(),
-        "estado": random.choice(["Activa", "Inactiva"])
+        "estado": random.choice(["Activa", "Inactiva"]),
+        "id_dispositivo": random.choice(dispositivos_ids)
     }
     for _ in range(mi_numero)
 ]
 
+# Insertar datos de alertas en la base de datos
 db_iot.alertas.insert_many(alertas_data)
 
+# Cerrar la conexión a la base de datos
 client_iot.close()
 
 db_config_inventario = {
@@ -170,37 +206,46 @@ with pymysql.connect(**db_config_inventario) as connection:
         }
         insert_fake_data(connection, 'pedidos', pedido_data)
 
-# Insertar datos ficticios en la base de datos de gestión de facturación
+client_ids = []
+factur_ids = []
+
 with pymysql.connect(**db_config_billing) as connection:
-    for _ in range(mi_numero):  # Insertar 5 clientes ficticios
+    for _ in range(mi_numero):
         client_data = {
             'nombre_cliente': fake.name(),
             'direccion': fake.address(),
             'correo': fake.email(),
-            'telefono': fake.phone_number()[:9]        
+            'telefono': fake.phone_number()[:9]
         }
         insert_fake_data(connection, 'clientes', client_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        client_id = cursor.fetchone()[0]
+        cursor.close()
+        client_ids.append(client_id)
 
-    for _ in range(mi_numero):  # Insertar 8 facturas ficticias
+    for _ in range(mi_numero):
         factura_data = {
-            'id_cliente': fake.random_int(min=1, max=5),
+            'id_cliente': fake.random_element(elements=client_ids),
             'fecha_factura': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d'),
             'total_factura': fake.random_int(min=100, max=1000) + fake.random_number(digits=2) / 100
         }
         insert_fake_data(connection, 'facturas', factura_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        factura_id = cursor.fetchone()[0]
+        cursor.close()
+        factur_ids.append(factura_id)
 
-    for _ in range(mi_numero):  # Insertar 10 detalles de factura ficticios
+    for _ in range(mi_numero):
         detalle_data = {
-            'id_factura': fake.random_int(min=1, max=8),
+            'id_factura': fake.random_element(elements=factur_ids),
             'id_producto': fake.random_int(min=1, max=10),
             'cantidad': fake.random_int(min=1, max=20),
             'precio_unitario': fake.random_int(min=10, max=100) + fake.random_number(digits=2) / 100
         }
         insert_fake_data(connection, 'detalles_factura', detalle_data)
 
-# Repetir el proceso para otras bases de datos y tablas
-
-# Insertar datos ficticios en la base de datos de gestión de proyectos
 with pymysql.connect(**db_config_projects) as connection:
     for _ in range(mi_numero):  # Insertar 5 proyectos ficticios
         project_data = {

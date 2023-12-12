@@ -83,7 +83,6 @@ services:
       - ./inyecciones/proyectos:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
-      
-  
+
 networks:
   pr_ps:
