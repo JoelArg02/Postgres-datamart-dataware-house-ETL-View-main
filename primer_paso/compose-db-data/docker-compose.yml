@@ -9,6 +9,7 @@ services:
       - ./volumenes/mongo_redes_sociales_data:/data/db
     networks:
       - pr_ps
+    
 
   mongo_iot:
     image: mongo:latest
@@ -18,6 +19,7 @@ services:
       - ./volumenes/mongo_iot_data:/data/db
     networks:
       - pr_ps
+    
 
   mysql_inventario:
     image: mysql:latest
@@ -31,6 +33,7 @@ services:
       - ./inyecciones/inventario:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
+    
 
   mysql_recursos_humanos:
     image: mysql:latest
@@ -44,6 +47,7 @@ services:
       - ./inyecciones/recursos_humanos:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
+    
 
   mysql_ventas:
     image: mysql:latest
@@ -57,6 +61,7 @@ services:
       - ./inyecciones/ventas:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
+    
 
   mysqli_facturacion:
     image: mysql:latest
@@ -70,6 +75,7 @@ services:
       - ./inyecciones/facturacion:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
+    
 
   mysqli_proyectos:
     image: mysql:latest
@@ -83,6 +89,7 @@ services:
       - ./inyecciones/proyectos:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
+    
 
 networks:
   pr_ps:

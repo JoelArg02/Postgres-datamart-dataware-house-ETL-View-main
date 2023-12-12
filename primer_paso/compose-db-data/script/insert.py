@@ -14,16 +14,13 @@ mi_numero = 100
 
 client = MongoClient("mongodb://localhost:27017")
 db = client["redes"]
-fake = Faker()
-
-
 
 usuarios = []
-ids_usuario = []  # Lista para guardar los IDs generados
+ids_usuario = []
 
 for _ in range(mi_numero):
-    id_usuario = random.randint(1, 100)
-    ids_usuario.append(id_usuario)  # Guarda el ID generado
+    id_usuario = random.randint(1, 9999)
+    ids_usuario.append(id_usuario)
 
     usuario = {
         "id_usuario": id_usuario,
@@ -39,14 +36,14 @@ for usuario in usuarios:
     usuario["amigos"] = [amigo["id_usuario"] for amigo in amigos_potenciales]
     db.usuarios.update_one({"id_usuario": usuario["id_usuario"]}, {"$set": {"amigos": usuario["amigos"]}})
 
-ids_publicacion = []  # Lista para almacenar los IDs de publicación
+ids_publicacion = [] 
 
 for _ in range(mi_numero):
-    id_pub = random.randint(1, 1000)  # Genera un ID único para la publicación
-    ids_publicacion.append(id_pub)  # Guarda el ID generado
+    id_pub = random.randint(1, 1000) 
+    ids_publicacion.append(id_pub) 
 
     publicacion = {
-        "id_publicacion": id_pub,  # Asigna el ID único a la publicación
+        "id_publicacion": id_pub, 
         "id_usuario": random.choice(ids_usuario),
         "contenido": fake.text(),
         "fecha_publicacion": datetime.utcnow(),
@@ -56,7 +53,7 @@ for _ in range(mi_numero):
 
 for _ in range(mi_numero):
     comentario = {
-        "id_publicacion": random.choice(ids_publicacion),  # Usa un ID de la lista de IDs de publicación
+        "id_publicacion": random.choice(ids_publicacion),
         "texto": fake.text(),
         "fecha_comentario": datetime.utcnow()
     }
@@ -68,8 +65,6 @@ client.close()
 
 client_iot = MongoClient("mongodb://localhost:27018")
 db_iot = client_iot["iot"]
-
-fake = Faker('es_ES')
 
 tipos_sensores = ["Sensor de Temperatura", "Sensor de Humedad", "Sensor de Luz", "Sensor de Presión", "Sensor de Sonido"]
 
@@ -83,10 +78,8 @@ dispositivos_data = [
     for _ in range(mi_numero)
 ]
 
-# Insertar dispositivos en la base de datos y obtener sus IDs
 dispositivos_ids = db_iot.dispositivos.insert_many(dispositivos_data).inserted_ids
 
-# Crear sensores, lecturas y alertas con referencias a dispositivos existentes
 sensor_data = [
     {
         "tipo_sensor": random.choice(tipos_sensores),
@@ -95,7 +88,6 @@ sensor_data = [
     for _ in range(mi_numero)
 ]
 
-# Insertar datos de sensores en la base de datos
 db_iot.sensores_informacion.insert_many(sensor_data)
 
 lecturas_data = [
@@ -107,7 +99,6 @@ lecturas_data = [
     for _ in range(mi_numero)
 ]
 
-# Insertar datos de lecturas en la base de datos
 db_iot.lecturas_sensores.insert_many(lecturas_data)
 
 alertas_data = [
@@ -120,10 +111,8 @@ alertas_data = [
     for _ in range(mi_numero)
 ]
 
-# Insertar datos de alertas en la base de datos
 db_iot.alertas.insert_many(alertas_data)
 
-# Cerrar la conexión a la base de datos
 client_iot.close()
 
 db_config_inventario = {
@@ -139,7 +128,7 @@ db_config_hr = {
     'user': 'root',
     'password': 'root_password',
     'database': 'recursos_humanos',
-    'port': 3307  # Puerto de MySQL diferente al predeterminado
+    'port': 3307 
 }
 
 db_config_sales = {
@@ -147,7 +136,7 @@ db_config_sales = {
     'user': 'root',
     'password': 'root_password',
     'database': 'ventas',
-    'port': 3308  # Puerto de MySQL diferente al predeterminado
+    'port': 3308 
 }
 
 db_config_billing = {
@@ -155,7 +144,7 @@ db_config_billing = {
     'user': 'root',
     'password': 'root_password',
     'database': 'gestion_facturacion',
-    'port': 3309  # Puerto de MySQL diferente al predeterminado
+    'port': 3309 
 }
 
 db_config_projects = {
@@ -163,10 +152,9 @@ db_config_projects = {
     'user': 'root',
     'password': 'root_password',
     'database': 'gestion_proyectos',
-    'port': 3310  # Puerto de MySQL diferente al predeterminado
+    'port': 3310 
 }
 
-# Función para insertar datos ficticios en la base de datos
 def insert_fake_data(connection, table, data):
     cursor = connection.cursor()
     placeholders = ', '.join(['%s'] * len(data))
@@ -175,32 +163,44 @@ def insert_fake_data(connection, table, data):
     cursor.execute(sql, tuple(data.values()))
     connection.commit()
 
-# Generar datos ficticios con Faker
 fake = Faker()
 
-# Insertar datos ficticios en la base de datos de inventario
+id_proveedor = []
+id_producto = []
 with pymysql.connect(**db_config_inventario) as connection:
-    for _ in range(mi_numero):  # Insertar 10 productos ficticios
-        product_data = {
-            'nombre_producto': fake.word(),
-            'categoria': fake.word(),
-            'stock_actual': fake.random_int(min=1, max=100),
-            'stock_minimo': fake.random_int(min=1, max=50)
-        }
-        insert_fake_data(connection, 'productos', product_data)
-
-    for _ in range(mi_numero):  # Insertar 5 proveedores ficticios
+  
+    for _ in range(mi_numero): 
         provider_data = {
             'nombre_proveedor': fake.company(),
             'direccion': fake.address(),
             'contacto': fake.name()
         }
         insert_fake_data(connection, 'proveedores', provider_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        proveedor_id = cursor.fetchone()[0]
+        cursor.close()
+        id_proveedor.append(proveedor_id)
 
-    for _ in range(mi_numero):  # Insertar 8 pedidos ficticios
+    for _ in range(mi_numero):
+        product_data = {
+            'nombre_producto': fake.word(),
+            'categoria': fake.word(),
+            'stock_actual': fake.random_int(min=1, max=100),
+            'stock_minimo': fake.random_int(min=1, max=50),
+            'id_proveedor': fake.random_element(elements=id_proveedor)
+        }
+        insert_fake_data(connection, 'productos', product_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        producto_id = cursor.fetchone()[0]
+        cursor.close()
+        id_producto.append(producto_id)
+    
+    for _ in range(mi_numero):
         pedido_data = {
-            'id_producto': fake.random_int(min=1, max=10),
-            'id_proveedor': fake.random_int(min=1, max=5),
+            'id_producto': fake.random_element(elements=id_producto),
+            'id_proveedor': fake.random_element(elements=id_proveedor),
             'cantidad': fake.random_int(min=1, max=20),
             'fecha_pedido': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d')
         }
@@ -240,14 +240,56 @@ with pymysql.connect(**db_config_billing) as connection:
     for _ in range(mi_numero):
         detalle_data = {
             'id_factura': fake.random_element(elements=factur_ids),
-            'id_producto': fake.random_int(min=1, max=10),
+            'id_producto': fake.random_element(elements=id_producto),
             'cantidad': fake.random_int(min=1, max=20),
             'precio_unitario': fake.random_int(min=10, max=100) + fake.random_number(digits=2) / 100
         }
         insert_fake_data(connection, 'detalles_factura', detalle_data)
 
+
+id_proyect = []
+
+id_empleado = []
+id_departamento = []
+with pymysql.connect(**db_config_hr) as connection:
+    for _ in range(mi_numero):
+        departamento_data = {
+            'nombre_departamento': fake.word()
+        }
+        insert_fake_data(connection, 'departamentos', departamento_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        departamento_id = cursor.fetchone()[0]
+        cursor.close()
+        id_departamento.append(departamento_id)
+
+    for _ in range(mi_numero):
+        empleado_data = {
+            'nombre': fake.first_name(),
+            'apellido': fake.last_name(),
+            'edad': fake.random_int(min=20, max=60),
+            'puesto': fake.job(),
+            'salario': fake.random_int(min=30000, max=80000) + fake.random_number(digits=2) / 100,
+            'id_departamento': fake.random_element(elements=id_departamento)
+        }
+        insert_fake_data(connection, 'empleados', empleado_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        empleado_id = cursor.fetchone()[0]
+        cursor.close()
+        id_empleado.append(empleado_id)
+
+    for _ in range(mi_numero):
+        historial_data = {
+            'id_empleado': fake.random_element(elements=id_empleado),
+            'salario_anterior': fake.random_int(min=30000, max=80000) + fake.random_number(digits=2) / 100,
+            'salario_nuevo': fake.random_int(min=30000, max=80000) + fake.random_number(digits=2) / 100,
+            'fecha_modificacion': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d')
+        }
+        insert_fake_data(connection, 'historial_salarios', historial_data)
+
 with pymysql.connect(**db_config_projects) as connection:
-    for _ in range(mi_numero):  # Insertar 5 proyectos ficticios
+    for _ in range(mi_numero):
         project_data = {
             'nombre_proyecto': fake.catch_phrase(),
             'fecha_inicio': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d'),
@@ -255,73 +297,45 @@ with pymysql.connect(**db_config_projects) as connection:
             'estado': fake.word()
         }
         insert_fake_data(connection, 'proyectos', project_data)
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        proyect_id = cursor.fetchone()[0]
+        cursor.close()
+        id_proyect.append(proyect_id)
 
-    for _ in range(mi_numero):  # Insertar 15 tareas ficticias
+    for _ in range(mi_numero):
         tarea_data = {
-            'id_proyecto': fake.random_int(min=1, max=5),
+            'id_proyecto': fake.random_element(elements=id_proyect),
             'descripcion': fake.text(),
             'fecha_limite': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d'),
             'estado_tarea': fake.word()
         }
         insert_fake_data(connection, 'tareas', tarea_data)
 
-    for _ in range(mi_numero):  # Insertar 10 miembros de equipo ficticios
+
+    for _ in range(mi_numero):
         miembro_data = {
-            'id_proyecto': fake.random_int(min=1, max=5),
-            'id_empleado': fake.random_int(min=1, max=50),
+            'id_proyecto': fake.random_element(elements=id_proyect),
+            'id_empleado': fake.random_element(elements=id_empleado),
             'rol': fake.word()
         }
         insert_fake_data(connection, 'miembros_equipo', miembro_data)
 
-# Insertar datos ficticios en la base de datos de recursos humanos
-with pymysql.connect(**db_config_hr) as connection:
-    for _ in range(mi_numero):  # Insertar 15 empleados ficticios
-        empleado_data = {
-            'nombre': fake.first_name(),
-            'apellido': fake.last_name(),
-            'edad': fake.random_int(min=20, max=60),
-            'puesto': fake.job(),
-            'salario': fake.random_int(min=30000, max=80000) + fake.random_number(digits=2) / 100
-        }
-        insert_fake_data(connection, 'empleados', empleado_data)
-
-    for _ in range(mi_numero):  # Insertar 5 departamentos ficticios
-        departamento_data = {
-            'nombre_departamento': fake.word()
-        }
-        insert_fake_data(connection, 'departamentos', departamento_data)
-
-    for _ in range(mi_numero):  # Insertar 10 historiales de salarios ficticios
-        historial_data = {
-            'id_empleado': fake.random_int(min=1, max=15),
-            'salario_anterior': fake.random_int(min=30000, max=80000) + fake.random_number(digits=2) / 100,
-            'salario_nuevo': fake.random_int(min=30000, max=80000) + fake.random_number(digits=2) / 100,
-            'fecha_modificacion': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d')
-        }
-        insert_fake_data(connection, 'historial_salarios', historial_data)
-
-# Insertar datos ficticios en la base de datos de ventas
 with pymysql.connect(**db_config_sales) as connection:
-    for _ in range(mi_numero):  # Insertar 5 clientes ficticios
+    for _ in range(mi_numero):
         client_data = {
             'nombre': fake.name(),
             'direccion': fake.address(),
             'correo': fake.email(),
-            'telefono': fake.phone_number()[:9]
+            'telefono': fake.phone_number()[:9],
+            'facturado': bool(fake.random_int(min=0, max=1))
         }
         insert_fake_data(connection, 'clientes', client_data)
 
-    for _ in range(mi_numero):  # Insertar 10 productos ficticios
-        product_data = {
-            'nombre_producto': fake.word(),
-            'precio': fake.random_int(min=10, max=100) + fake.random_number(digits=2) / 100,
-            'stock': fake.random_int(min=1, max=50)
-        }
-        insert_fake_data(connection, 'productos', product_data)
-
-    for _ in range(mi_numero):  # Insertar 8 ventas ficticias
+    for _ in range(mi_numero):
         venta_data = {
-            'id_cliente': fake.random_int(min=1, max=5),
+            'id_producto': fake.random_element(elements=id_producto),
+            'id_cliente': fake.random_element(elements=client_ids),
             'fecha_venta': fake.date_between(start_date='-1y', end_date='today').strftime('%Y-%m-%d'),
             'total_venta': fake.random_int(min=100, max=1000) + fake.random_number(digits=2) / 100
         }

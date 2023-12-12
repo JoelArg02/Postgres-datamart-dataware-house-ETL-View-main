@@ -22,7 +22,7 @@ CREATE TABLE detalles_factura (
     id_factura INT,
     id_producto INT,
     cantidad INT,
-    precio_unitario DECIMAL(10, 2)
+    precio_unitario DECIMAL(10, 2),
     FOREIGN KEY (id_factura) REFERENCES facturas (id_factura)    
 );
 
