@@ -161,16 +161,23 @@ def extraer_datos_lecturas_sensores():
     datos_lecturas_sensores = coleccion_lecturas_sensores.find()
     return list(datos_lecturas_sensores)
 
+def crear_mapeo_id_sensor(datos_sensores):
+    mapeo = {}
+    id_sensor = 1  # Comenzar a asignar IDs desde 1
+    for sensor in datos_sensores:
+        tipo_sensor = sensor['tipo_sensor']
+        if tipo_sensor not in mapeo:
+            mapeo[tipo_sensor] = id_sensor
+            id_sensor += 1
+    return mapeo
 
 
 def transformar_datos_lecturas_sensores(datos_mongo, mapeo_id_sensor):
     datos_transformados = []
     for dato in datos_mongo:
-        id_dispositivo_hash = hashlib.sha1(str(dato['_id']).encode()).hexdigest()
-        id_dispositivo_int = int(id_dispositivo_hash[:13], 16)  # Tomar los primeros 15 caracteres para evitar el overflow de entero
         datos_transformados.append({
-            'id_iot': id_dispositivo_int,
-            'id_sensor': mapeo_id_sensor.get(dato['id_dispositivo']),
+        tipo_sensor = dato['tipo_sensor']
+        id_sensor = mapeo_id_sensor.get(tipo_sensor) 
             'fecha': dato['fecha_lectura'],
             'valor': dato['valor']
 
@@ -187,6 +194,7 @@ def insertar_datos_iot(cursor, datos_iot):
     except psycopg2.Error as e:
         postgres_conn.rollback()
         print(f"Error al insertar datos en dimension_iot: {e}")
+
 
 
 # Ejecución del Proceso ETL
