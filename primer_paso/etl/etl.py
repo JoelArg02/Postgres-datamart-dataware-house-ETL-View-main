@@ -175,14 +175,15 @@ def crear_mapeo_id_sensor(datos_sensores):
 def transformar_datos_lecturas_sensores(datos_mongo, mapeo_id_sensor):
     datos_transformados = []
     for dato in datos_mongo:
-        datos_transformados.append({
         tipo_sensor = dato['tipo_sensor']
-        id_sensor = mapeo_id_sensor.get(tipo_sensor) 
+        id_sensor = mapeo_id_sensor.get(tipo_sensor)
+        datos_transformados.append({
+            'id_sensor': id_sensor,
             'fecha': dato['fecha_lectura'],
             'valor': dato['valor']
-
         })
     return datos_transformados
+
 
 def insertar_datos_iot(cursor, datos_iot):
     consulta = "INSERT INTO dimension_iot (id_iot, id_sensor, fecha, valor) VALUES (%s, %s, %s, %s)"
@@ -197,14 +198,12 @@ def insertar_datos_iot(cursor, datos_iot):
 
 
 
-# Ejecución del Proceso ETL
 datos_sensores = extraer_datos_sensores_informacion()
 mapeo_id_sensor = crear_mapeo_id_sensor(datos_sensores)
 datos_lecturas_sensores = extraer_datos_lecturas_sensores()
 datos_lecturas_sensores_transformados = transformar_datos_lecturas_sensores(datos_lecturas_sensores, mapeo_id_sensor)
 insertar_datos_iot(postgres_cursor, datos_lecturas_sensores_transformados)
 
-# Cerrar Conexiones
 mongo_client.close()
 mongo_client2.close()
 postgres_cursor.close()
