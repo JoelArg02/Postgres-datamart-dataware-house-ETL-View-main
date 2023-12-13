@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  master-1:
+    image: postgres
+    container_name: master-1
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: etlb
+    networks:
+      - nodos-master
+    volumes:
+      - ../primer_paso/compose-db-data/volumenes/postgres_master1_data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=3"
+      - "-c"
+      - "max_replication_slots=3"
+      - "-c"
+      - "listen_addresses=*"
+
+  master-2:
+    image: postgres
+    container_name: master-2
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: etlb
+
+    networks:
+      - nodos-master
+    volumes:
+      - ../primer_paso/compose-db-data/volumenes/postgres_master2_data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=3"
+      - "-c"
+      - "max_replication_slots=3"
+      - "-c"
+      - "listen_addresses=*"
+
+networks:
+  nodos-master:
+    driver: bridge
+
+volumes:
+  master1_data:
+  master2_data:
