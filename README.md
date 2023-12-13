@@ -7,8 +7,17 @@ Se creo este proyecto y repositorio como parte de la evaluacion conjunta del pri
 ## Necesario para iniciar
 
 Necesitaras docker para poder comenzar con este proyecto
+# Descargar imagen postgres
 
+```
+docker pull postgres:latest
+```
+
+# Crear una red
+```
 docker network create nodes-master
+```
+
 
 # Nodo Maestro 1
 ```

@@ -62,7 +62,6 @@ services:
     networks:
       - pr_ps
     
-
   mysqli_facturacion:
     image: mysql:latest
     environment:
@@ -76,7 +75,6 @@ services:
     networks:
       - pr_ps
     
-
   mysqli_proyectos:
     image: mysql:latest
     environment:
