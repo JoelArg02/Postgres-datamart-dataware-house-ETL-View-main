@@ -3,7 +3,7 @@
 volumenes/
 compose-db-data/volumenes
 primer_paso/compose-db-data/volumenes
-
+/view/venv
 mysql.sockls
-
+/view\view\__pycache__
 primer_paso/compose-db-data/volumenes/mysql_inventario_data/mysql.sock
