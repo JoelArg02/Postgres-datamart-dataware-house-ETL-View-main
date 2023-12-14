@@ -9,7 +9,8 @@ services:
       - ./volumenes/mongo_redes_sociales_data:/data/db
     networks:
       - pr_ps
-    
+    restart: on-failure
+    mem_limit: 100m
 
   mongo_iot:
     image: mongo:latest
@@ -19,7 +20,8 @@ services:
       - ./volumenes/mongo_iot_data:/data/db
     networks:
       - pr_ps
-    
+    restart: on-failure
+    mem_limit: 100m
 
   mysql_inventario:
     image: mysql:latest
@@ -33,7 +35,8 @@ services:
       - ./inyecciones/inventario:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
-    
+    restart: on-failure
+    mem_limit: 100m
 
   mysql_recursos_humanos:
     image: mysql:latest
@@ -47,7 +50,11 @@ services:
       - ./inyecciones/recursos_humanos:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
-    
+    restart: on-failure
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   mysql_ventas:
     image: mysql:latest
@@ -61,7 +68,12 @@ services:
       - ./inyecciones/ventas:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
-    
+    restart: on-failure
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
   mysqli_facturacion:
     image: mysql:latest
     environment:
@@ -74,7 +86,12 @@ services:
       - ./inyecciones/facturacion:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
-    
+    restart: on-failure
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
   mysqli_proyectos:
     image: mysql:latest
     environment:
@@ -87,6 +104,11 @@ services:
       - ./inyecciones/proyectos:/docker-entrypoint-initdb.d
     networks:
       - pr_ps
+    restart: on-failure
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   postgres:
     image: postgres:latest
@@ -99,8 +121,11 @@ services:
       - ./volumenes/postgres_data:/var/lib/postgresql/data
     networks:
       - pr_ps
-
-   
+    restart: on-failure
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
 networks:
   pr_ps:
