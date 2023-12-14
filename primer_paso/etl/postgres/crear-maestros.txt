@@ -1,46 +1,158 @@
-# Postgres-datamart-dataware-house-ETL-View-main
+---COMANDO EXAMEN FINAL----
+----CONTENEDOR 1-----------
+docker run --name examen_server1 --network redExamen -e POSTGRES_PASSWORD=123456 -p 5435:5432 --cpus=1 --memory=500MB -d -v C:\Users\chris\Desktop\ExamenPostgres:/data/db --ulimit nofile=1024:1024 postgres
+docker exec -it examen_server1 bash
 
-## ¿El por qué del proyecto? 
+apt-get update
+apt-get install -y build-essential postgresql-server-dev-all
+apt-get install -y git
+apt-get install -y postgresql-server-dev-15
+apt-get install libgssapi3-heimdal libgssapi-krb5-2
+apt-get install -y build-essential
+apt-get install -y libkrb5-dev
+apt-get install -y libselinux1-dev zlib1g-dev liblz4-dev libxslt1-dev libxml2-dev libpam0g-dev
+apt-get install -y libzstd-dev
+apt-get install -y nano
+apt-get update
+git clone https://github.com/2ndQuadrant/pglogical.git
+cd pglogical
 
-Se creo este proyecto y repositorio como parte de la evaluacion conjunta del primer parcial de base de datos avanzada
-
-## Necesario para iniciar
-
-Necesitaras docker para poder comenzar con este proyecto
-
-docker network create nodes-master
-
-docker run --name master-1 -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres
-docker network connect nodos-master master-1
-docker run --name master-2 -p 5433:5432 -e POSTGRES_PASSWORD=password -d postgres
-docker network connect nodos-master master-2
-
-docker exec -it postgres-master1 bash
-
-# Acceder a la consola de PostgreSQL
-psql -U postgres
-
-# Configurar el nodo Maestro 1
-ALTER SYSTEM SET wal_level = 'logical';
-ALTER SYSTEM SET max_wal_senders = 3;
-ALTER SYSTEM SET max_replication_slots = 3;
-ALTER SYSTEM SET listen_addresses = '*';
-
-SELECT pg_create_logical_replication_slot('replication_slot1', 'pgoutput');
-
-docker exec -it postgres-master2 bash
-
-# Acceder a la consola de PostgreSQL
-psql -U postgres
-
-# Configurar el nodo Maestro 2
-ALTER SYSTEM SET wal_level = 'logical';
-ALTER SYSTEM SET max_wal_senders = 3;
-ALTER SYSTEM SET max_replication_slots = 3;
-ALTER SYSTEM SET listen_addresses = '*';
+make && make install
 
 
-SELECT pg_create_logical_replication_slot('replication_slot2', 'pgoutput');
+
+nano /var/lib/postgresql/data/postgresql.conf
+shared_preload_libraries = 'pglogical’
+wal_level = logical
+docker stop examen_server1
+docker start examen_server1
+docker exec -it server1 bash
+psql -h localhost -p 5432 -U postgres
+CREATE DATABASE libreria;
+\c libreria;
+#CREACION DE LAS TABLAS
+CREATE TABLE public.arbitro (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    edad INTEGER,
+    equipo VARCHAR(100)
+);
+CREATE EXTENSION pglogical;
+
+ SELECT pg_create_logical_replication_slot('slot_1', 'pgoutput');
+
+ SELECT pglogical.create_node(node_name := 'node1', dsn := 'host=localhost port=5432 dbname=examen user=postgres password=123456');
+ SELECT pglogical.create_replication_set('replication_set_1', true);
 
 
-docker restart maestro-1 maestro-2
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.arbitro', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.equipo', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.hincha', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.jugador', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.partido', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.sede', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.registro', true);
+
+
+
+
+hostname -i  172.24.0.2
+SELECT pglogical.create_subscription(
+  subscription_name := 'subscription_1',
+  provider_dsn := 'host=172.24.0.3 port=5432 dbname=examen user=postgres password=123456'
+); 
+SELECT pglogical.alter_subscription_add_replication_set('subscription_1', 'replication_set_1');
+
+
+----CONTENEDOR 2-----------
+docker run --name examen_server2 --network redExamen -e POSTGRES_PASSWORD=123456 -p 5436:5432 --cpus=1 --memory=500MB -d -v C:\Users\chris\Desktop\ExamenPostgres2:/data/db --ulimit nofile=1024:1024 postgres
+
+docker exec -it examen_server2 bash
+
+
+apt-get update
+apt-get install -y build-essential postgresql-server-dev-all
+apt-get install -y git
+apt-get install -y postgresql-server-dev-15
+apt-get install libgssapi3-heimdal libgssapi-krb5-2
+apt-get install -y build-essential
+apt-get install -y libkrb5-dev
+apt-get install -y libselinux1-dev zlib1g-dev liblz4-dev libxslt1-dev libxml2-dev libpam0g-dev
+apt-get install -y libzstd-dev
+apt-get install -y nano
+apt-get update
+git clone https://github.com/2ndQuadrant/pglogical.git
+cd pglogical
+
+make && make install
+
+nano /var/lib/postgresql/data/postgresql.conf
+shared_preload_libraries = 'pglogical’
+wal_level = logical
+docker stop examen_server2
+ docker start examen_server2
+docker exec -it examen_server2 bash
+
+
+psql -h localhost -p 5432 -U postgres
+CREATE DATABASE examen;
+\c examen;
+#CREACION DE LAS TABLAS
+
+CREATE EXTENSION pglogical;
+SELECT pglogical.create_node(node_name := 'node2', dsn := 'host=localhost port=5432 dbname=examen user=postgres password=123456');
+SELECT slot_name FROM pg_replication_slots WHERE plugin = 'pglogical_output';
+SELECT pglogical.create_subscription(
+  subscription_name := 'subscription_1',
+  provider_dsn := 'host=172.24.0.2 port=5432 dbname=examen user=postgres password=123456'
+); 
+SELECT pglogical.create_replication_set('replication_set_1', true);
+
+
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.arbitro', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.equipo', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.hincha', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.jugador', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.partido', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.sede', true);
+SELECT pglogical.replication_set_add_table('replication_set_1', 'public.registro', true);
+
+
+SELECT pglogical.alter_subscription_add_replication_set('subscription_1', 'replication_set_1');
+ 
+hostname -i 172.24.0.3
+--------------------------------------------------------------------------------
+MONGO
+-------------------------------------------------------------------------------
+docker network create redMongoExamen1
+
+docker run -d --name mongo1Examen --network redMongoExamen1 -p 27020:27017 --cpus=1 --memory=500MB -v C:\Users\Asus\Documents\mongo1:/data/db --ulimit nofile=1024:1024 mongo --replSet myReplicaSet1
+
+docker run -d --name mongo2Examen --network redMongoExamen1 -p 27021:27017 --cpus=1 --memory=500MB -v C:\Users\Asus\Documents\mongo2:/data/db --ulimit nofile=1024:1024 mongo --replSet myReplicaSet1
+
+docker run -d --name mongo3Examen --network redMongoExamen1 -p 27022:27017 --cpus=1 --memory=500MB -v C:\Users\Asus\Documents\mongo3:/data/db --ulimit nofile=1024:1024 mongo --replSet myReplicaSet1
+
+docker exec mongo1Examen mongosh --eval "rs.initiate({_id: 'myReplicaSet1', members: [{_id: 0, host: 'mongo1Examen:27017'}, {_id: 1, host: 'mongo2Examen:27017'}, {_id: 2, host: 'mongo3Examen:27017'}]})”
+
+docker exec mongo1Examen mongosh --eval "rs.status()”
+
+docker exec -it mongo1Examen mongosh
+
+use examen
+
+db.imagenes.insertOne({
+    id_registro: 1,
+    imagen: "stringBase64Imagen1",
+    descripcion: "Descripción de la imagen  1"
+})
+
+db.imagenes.insertOne({
+    id_registro: 2,
+    imagen: "stringBase64Imagen2",
+    descripcion: "Descripción de la imagen 2"
+})
+
+ show collections
+show dbs
+db.imagenes.find()
+

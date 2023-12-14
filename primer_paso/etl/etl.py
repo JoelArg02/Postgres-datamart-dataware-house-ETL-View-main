@@ -203,6 +203,69 @@ mapeo_id_sensor = crear_mapeo_id_sensor(datos_sensores)
 datos_lecturas_sensores = extraer_datos_lecturas_sensores()
 datos_lecturas_sensores_transformados = transformar_datos_lecturas_sensores(datos_lecturas_sensores, mapeo_id_sensor)
 insertar_datos_iot(postgres_cursor, datos_lecturas_sensores_transformados)
+def extraer_datos_usuarios():
+    db_iot = mongo_client2["iot"]
+    coleccion_usuarios = db_iot["usuarios"]
+    datos_usuarios = coleccion_usuarios.find()
+    return list(datos_usuarios)
+
+def transformar_datos_usuarios(datos_mongo):
+    datos_transformados = []
+    for dato in datos_mongo:
+        datos_transformados.append({
+            'id_usuario': dato['id_usuario'],
+            'nombre_usuario': dato['nombre_usuario'],
+            'correo': dato['correo']
+        })
+    return datos_transformados
+
+def insertar_datos_usuarios(cursor, datos_usuarios):
+    consulta = "INSERT INTO dimension_usuarios (id_usuario, nombre_usuario, correo) VALUES (%s, %s, %s)"
+    try:
+        for dato in datos_usuarios:
+            cursor.execute(consulta, (dato['id_usuario'], dato['nombre_usuario'], dato['correo']))
+        postgres_conn.commit()
+        print("Datos insertados correctamente en dimension_usuarios.")
+    except psycopg2.Error as e:
+        postgres_conn.rollback()
+        print(f"Error al insertar datos en dimension_usuarios: {e}")
+
+# Luego, llamar a estas funciones para realizar el proceso ETL de usuarios
+datos_usuarios = extraer_datos_usuarios()
+datos_usuarios_transformados = transformar_datos_usuarios(datos_usuarios)
+insertar_datos_usuarios(postgres_cursor, datos_usuarios_transformados)
+
+def extraer_datos_facturas():
+    coleccion_facturas = mongo_db["facturas"]
+    datos_facturas = coleccion_facturas.find()
+    return list(datos_facturas)
+
+def transformar_datos_facturas(datos_mongo):
+    datos_transformados = []
+    for dato in datos_mongo:
+        datos_transformados.append({
+            'id_factura': dato['id_factura'],
+            'nombre_cliente': dato['nombre_cliente'],
+            'fecha_factura': dato['fecha_factura'],
+            'total_factura': dato['total_factura']
+        })
+    return datos_transformados
+
+def insertar_datos_facturas(cursor, datos_facturas):
+    consulta = "INSERT INTO dimension_facturas (id_factura, nombre_cliente, fecha_factura, total_factura) VALUES (%s, %s, %s, %s)"
+    try:
+        for dato in datos_facturas:
+            cursor.execute(consulta, (dato['id_factura'], dato['nombre_cliente'], dato['fecha_factura'], dato['total_factura']))
+        postgres_conn.commit()
+        print("Datos insertados correctamente en dimension_facturas.")
+    except psycopg2.Error as e:
+        postgres_conn.rollback()
+        print(f"Error al insertar datos en dimension_facturas: {e}")
+
+# Luego, llamar a estas funciones para realizar el proceso ETL de facturas
+datos_facturas = extraer_datos_facturas()
+datos_facturas_transformados = transformar_datos_facturas(datos_facturas)
+insertar_datos_facturas(postgres_cursor, datos_facturas_transformados)
 
 mongo_client.close()
 mongo_client2.close()

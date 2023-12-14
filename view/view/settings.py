@@ -114,17 +114,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'etlb',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',  # O la dirección IP de tu servidor PostgreSQL
-        'PORT': '',           # Deja en blanco para usar el puerto predeterminado (5432)
-    }
-}
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
